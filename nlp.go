@@ -22,26 +22,67 @@ type Model struct {
 	Children []Model `json:"children"`
 }
 
+//Category is used to return the categorization result
+type Category struct {
+	Name        string    `json:"name"`
+	TotalWeight int       `json:"total_weight"`
+	Matched     []Matched `json:"matched"`
+}
+
+//Matched is used to store the words/phrases matched in the categorization result
+type Matched struct {
+	Value  string `json:"value"`
+	Weight int    `json:"weight"`
+}
+
 func main() {
 	r := gin.Default()
 
-	r.GET("/ping", ping)
-	r.GET("/nlp/finance/vanguard/model", getModelJSON)
 	r.POST("/nlp/finance/vanguard/categorize", categorize)
+	r.GET("/nlp/finance/vanguard/model", getModelJSON)
+	r.GET("/nlp/finance/vanguard/ping", ping)
 
 	r.Run()
 }
 
-func ping(c *gin.Context) {
-	c.JSON(http.StatusOK, "Healthy")
-}
-
 func categorize(c *gin.Context) {
 	var req ContentRequest
+	var categories []Category
 
 	c.BindJSON(&req)
 
-	c.JSON(http.StatusOK, req)
+	contentTokenized := tokenize(req.Content)
+	model := getModel()
+	modelStack := new(Stack)
+
+	modelStack.push(model.Children)
+
+	for modelStack.len() > 0 {
+		p := modelStack.pop().(Model)
+
+		//Binary search on each token in content
+		for _, tc := range contentTokenized {
+			if contains(strings.Split(p.Details, "|"), tc) {
+				categories = append(categories, Category{
+					Name:        p.Name,
+					TotalWeight: 1,
+					Matched: []Matched{
+						Matched{
+							Value:  tc,
+							Weight: 1,
+						},
+					},
+				})
+			}
+		}
+
+		//Add each child to the stack if it exists
+		for _, c := range p.Children {
+			modelStack.push(c)
+		}
+	}
+
+	c.JSON(http.StatusOK, categories)
 }
 
 func getModel() Model {
@@ -97,4 +138,52 @@ func intersectSorted(a interface{}, b interface{}) interface{} {
 	}
 
 	return set
+}
+
+func ping(c *gin.Context) {
+	c.JSON(http.StatusOK, "Healthy")
+}
+
+type item struct {
+	value interface{} //value as interface type to hold any data type
+	next  *item
+}
+
+//Stack to implement LIFO object
+type Stack struct {
+	top  *item
+	size int
+}
+
+func (stack *Stack) len() int {
+	return stack.size
+}
+
+func (stack *Stack) push(value interface{}) {
+	stack.top = &item{
+		value: value,
+		next:  stack.top,
+	}
+	stack.size++
+}
+
+func (stack *Stack) pop() (value interface{}) {
+	if stack.len() > 0 {
+		value = stack.top.value
+		stack.top = stack.top.next
+		stack.size--
+		return
+	}
+
+	return nil
+}
+
+//Helper functions
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }
