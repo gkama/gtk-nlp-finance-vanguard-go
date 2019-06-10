@@ -26,8 +26,8 @@ func main() {
 	r := gin.Default()
 
 	r.GET("/ping", ping)
-	r.GET("/model", func(c *gin.Context) { c.JSON(http.StatusOK, getModel) })
-	r.POST("nlp/finance/vanguard/categorize", categorize)
+	r.GET("/nlp/finance/vanguard/model", getModelJSON)
+	r.POST("/nlp/finance/vanguard/categorize", categorize)
 
 	r.Run()
 }
@@ -46,16 +46,22 @@ func categorize(c *gin.Context) {
 
 func getModel() Model {
 	return Model{
-		ID:   "984ce69d-de79-478b-9223-ff6349514e19",
-		Name: "Vanguard",
+		ID:      "984ce69d-de79-478b-9223-ff6349514e19",
+		Name:    "Vanguard",
+		Details: "",
 		Children: []Model{
 			Model{
-				ID:      "5ec6957d-4de7-4199-9373-d4a7fb59d6e1",
-				Name:    "Index Funds",
-				Details: "vbiix|vbinx|vbisx|vbltx|vbmfx|vdaix|vdvix|veiex|veurx|vexmx|vfinx|vfsvx|vftsx|vfwix|vgovx|vgtsx|vhdyx|viaix|vigrx|vihix|vimsx|visgx|visvx|vivax|vlacx|vmgix|vmvix|vpacx|vtebx|vtibx|vtipx|vtsax|vtsmx|vtws",
+				ID:       "5ec6957d-4de7-4199-9373-d4a7fb59d6e1",
+				Name:     "Index Funds",
+				Details:  "vbiix|vbinx|vbisx|vbltx|vbmfx|vdaix|vdvix|veiex|veurx|vexmx|vfinx|vfsvx|vftsx|vfwix|vgovx|vgtsx|vhdyx|viaix|vigrx|vihix|vimsx|visgx|visvx|vivax|vlacx|vmgix|vmvix|vpacx|vtebx|vtibx|vtipx|vtsax|vtsmx|vtws",
+				Children: []Model{},
 			},
 		},
 	}
+}
+func getModelJSON(c *gin.Context) {
+	model := getModel()
+	c.JSON(http.StatusOK, model)
 }
 
 func tokenize(content string) []string {
