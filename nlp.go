@@ -60,8 +60,7 @@ func getModel() Model {
 	}
 }
 func getModelJSON(c *gin.Context) {
-	model := getModel()
-	c.JSON(http.StatusOK, model)
+	c.JSON(http.StatusOK, getModel())
 }
 
 func tokenize(content string) []string {
