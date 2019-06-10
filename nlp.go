@@ -14,13 +14,22 @@ type ContentRequest struct {
 	Content string `json:"content"`
 }
 
+//Model stores the model used to categorize the content
+type Model struct {
+	ID       string  `json:"id"`
+	Name     string  `json:"name"`
+	Details  string  `json:"details"`
+	Children []Model `json:"children"`
+}
+
 func main() {
 	r := gin.Default()
 
 	r.GET("/ping", ping)
+	r.GET("/model", func(c *gin.Context) { c.JSON(http.StatusOK, getModel) })
 	r.POST("nlp/finance/vanguard/categorize", categorize)
 
-	r.Run() // listen and serve on 0.0.0.0:8080
+	r.Run()
 }
 
 func ping(c *gin.Context) {
@@ -33,6 +42,20 @@ func categorize(c *gin.Context) {
 	c.BindJSON(&req)
 
 	c.JSON(http.StatusOK, req)
+}
+
+func getModel() Model {
+	return Model{
+		ID:   "984ce69d-de79-478b-9223-ff6349514e19",
+		Name: "Vanguard",
+		Children: []Model{
+			Model{
+				ID:      "5ec6957d-4de7-4199-9373-d4a7fb59d6e1",
+				Name:    "Index Funds",
+				Details: "vbiix|vbinx|vbisx|vbltx|vbmfx|vdaix|vdvix|veiex|veurx|vexmx|vfinx|vfsvx|vftsx|vfwix|vgovx|vgtsx|vhdyx|viaix|vigrx|vihix|vimsx|visgx|visvx|vivax|vlacx|vmgix|vmvix|vpacx|vtebx|vtibx|vtipx|vtsax|vtsmx|vtws",
+			},
+		},
+	}
 }
 
 func tokenize(content string) []string {
@@ -53,7 +76,6 @@ func tokenize(content string) []string {
 func split(r rune) bool {
 	return r == ' ' || r == ',' || r == ';' || r == '!' || r == '?' || r == '.'
 }
-
 func intersectSorted(a interface{}, b interface{}) interface{} {
 	set := make([]interface{}, 0)
 	av := reflect.ValueOf(a)
