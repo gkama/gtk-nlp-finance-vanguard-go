@@ -6,8 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+//ContentRequest is to receive the content to categorize
 type ContentRequest struct {
-	Content string `json: content`
+	Content string `json:"content"`
 }
 
 func main() {
