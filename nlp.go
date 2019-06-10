@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,5 +29,15 @@ func categorize(c *gin.Context) {
 	var req ContentRequest
 
 	c.BindJSON(&req)
+
 	c.JSON(http.StatusOK, req)
+}
+
+func tokenize(content string) []string {
+	contentSplit := strings.FieldsFunc(content, split)
+
+	return contentSplit
+}
+func split(r rune) bool {
+	return r == ' ' || r == ',' || r == ';' || r == '!' || r == '?' || r == '.'
 }
