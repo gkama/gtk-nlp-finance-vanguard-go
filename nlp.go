@@ -183,6 +183,8 @@ func addCategory(categories []Category, model Model, value string) []Category {
 			},
 		})
 	} else {
+		//if matched.Value is empty, then add it
+		//else update the weight
 		var matched Matched
 		for i, m := range cat.Matched {
 			if m.Value == value {
@@ -192,9 +194,6 @@ func addCategory(categories []Category, model Model, value string) []Category {
 				categories[catIndex].Matched[i].Weight++
 			}
 		}
-
-		//if matched.Value is empty, then add it
-		//else update the weight
 		if matched.Value == "" {
 			categories[catIndex].TotalWeight++
 			categories[catIndex].Matched = append(categories[catIndex].Matched, Matched{
