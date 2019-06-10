@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -57,7 +56,6 @@ func categorize(c *gin.Context) {
 	for _, mc := range model.Children {
 		modelStack.push(mc)
 	}
-	fmt.Println(modelStack)
 
 	for modelStack.len() > 0 {
 		p := modelStack.pop().(Model)
@@ -65,16 +63,7 @@ func categorize(c *gin.Context) {
 		//Binary search on each token in content
 		for _, tc := range contentTokenized {
 			if contains(strings.Split(p.Details, "|"), tc) {
-				categories = append(categories, Category{
-					Name:        p.Name,
-					TotalWeight: 1,
-					Matched: []Matched{
-						Matched{
-							Value:  tc,
-							Weight: 1,
-						},
-					},
-				})
+				addCategory(categories, p, tc)
 			}
 		}
 
@@ -126,8 +115,6 @@ func tokenize(content string) []string {
 		}
 	}
 
-	fmt.Println(contentSplit)
-
 	return contentSplit
 }
 func split(r rune) bool {
@@ -138,21 +125,19 @@ func ping(c *gin.Context) {
 	c.JSON(http.StatusOK, "Healthy")
 }
 
+//Stack to implement LIFO object and breadth first search
+type Stack struct {
+	top  *item
+	size int
+}
 type item struct {
 	value interface{} //value as interface type to hold any data type
 	next  *item
 }
 
-//Stack to implement LIFO object
-type Stack struct {
-	top  *item
-	size int
-}
-
 func (stack *Stack) len() int {
 	return stack.size
 }
-
 func (stack *Stack) push(value interface{}) {
 	stack.top = &item{
 		value: value,
@@ -160,7 +145,6 @@ func (stack *Stack) push(value interface{}) {
 	}
 	stack.size++
 }
-
 func (stack *Stack) pop() (value interface{}) {
 	if stack.len() > 0 {
 		value = stack.top.value
@@ -170,6 +154,53 @@ func (stack *Stack) pop() (value interface{}) {
 	}
 
 	return nil
+}
+
+//Add category if it doesn't exist
+//else, you update the matched weight
+func addCategory(categories []Category, model Model, value string) []Category {
+	//check if categories has the model.Name
+	var cat Category
+	for _, c := range categories {
+		if c.Name == model.Name {
+			cat = c
+		}
+	}
+
+	//if cat is not empty then add a new one
+	//else if cat is not empty and there is a matched, update the weight
+	if cat.Name == "" {
+		categories = append(categories, Category{
+			Name:        model.Name,
+			TotalWeight: 1,
+			Matched: []Matched{
+				Matched{
+					Value:  value,
+					Weight: 1,
+				},
+			},
+		})
+	} else {
+		var matched Matched
+		for _, m := range cat.Matched {
+			if m.Value == value {
+				matched = m
+			}
+		}
+
+		//if matched.Value is empty, then add it
+		//else update the weight
+		if matched.Value == "" {
+			cat.Matched = append(cat.Matched, Matched{
+				Value:  value,
+				Weight: 1,
+			})
+		} else {
+			matched.Weight++
+		}
+	}
+
+	return categories
 }
 
 //Helper functions
