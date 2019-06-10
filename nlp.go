@@ -63,7 +63,7 @@ func categorize(c *gin.Context) {
 		//Binary search on each token in content
 		for _, tc := range contentTokenized {
 			if contains(strings.Split(p.Details, "|"), tc) {
-				addCategory(categories, p, tc)
+				categories = addCategory(categories, p, tc)
 			}
 		}
 
@@ -161,9 +161,11 @@ func (stack *Stack) pop() (value interface{}) {
 func addCategory(categories []Category, model Model, value string) []Category {
 	//check if categories has the model.Name
 	var cat Category
-	for _, c := range categories {
+	var catIndex int
+	for i, c := range categories {
 		if c.Name == model.Name {
 			cat = c
+			catIndex = i
 		}
 	}
 
@@ -182,21 +184,23 @@ func addCategory(categories []Category, model Model, value string) []Category {
 		})
 	} else {
 		var matched Matched
-		for _, m := range cat.Matched {
+		for i, m := range cat.Matched {
 			if m.Value == value {
 				matched = m
+
+				categories[catIndex].TotalWeight++
+				categories[catIndex].Matched[i].Weight++
 			}
 		}
 
 		//if matched.Value is empty, then add it
 		//else update the weight
 		if matched.Value == "" {
-			cat.Matched = append(cat.Matched, Matched{
+			categories[catIndex].TotalWeight++
+			categories[catIndex].Matched = append(categories[catIndex].Matched, Matched{
 				Value:  value,
 				Weight: 1,
 			})
-		} else {
-			matched.Weight++
 		}
 	}
 
