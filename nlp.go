@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"reflect"
-	"sort"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -120,29 +118,19 @@ func tokenize(content string) []string {
 		"i", "after", "few", "whom", "t", "being", "if", "theirs", "my", "against", "a", "by", "doing", "it", "how",
 		"further", "was", "here", "than"}
 
-	intersected := intersectSorted(contentSplit, stopWords)
-	fmt.Println(intersected)
-	return nil
-}
-func split(r rune) bool {
-	return r == ' ' || r == ',' || r == ';' || r == '!' || r == '?' || r == '.'
-}
-func intersectSorted(a interface{}, b interface{}) interface{} {
-	set := make([]interface{}, 0)
-	av := reflect.ValueOf(a)
-	bv := reflect.ValueOf(b)
-
-	for i := 0; i < av.Len(); i++ {
-		el := av.Index(i).Interface()
-		idx := sort.Search(bv.Len(), func(i int) bool {
-			return bv.Index(i).Interface() == el
-		})
-		if idx < bv.Len() && bv.Index(idx).Interface() == el {
-			set = append(set, el)
+	//Remove stop words
+	for i, cs := range contentSplit {
+		if contains(stopWords, cs) {
+			contentSplit = append(contentSplit[:i], contentSplit[i+1:]...)
 		}
 	}
 
-	return set
+	fmt.Println(contentSplit)
+
+	return contentSplit
+}
+func split(r rune) bool {
+	return r == ' ' || r == ',' || r == ';' || r == '!' || r == '?' || r == '.'
 }
 
 func ping(c *gin.Context) {
@@ -186,7 +174,7 @@ func (stack *Stack) pop() (value interface{}) {
 //Helper functions
 func contains(s []string, e string) bool {
 	for _, a := range s {
-		if a == e {
+		if strings.EqualFold(a, e) {
 			return true
 		}
 	}
