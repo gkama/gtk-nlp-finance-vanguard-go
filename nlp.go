@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"reflect"
 	"sort"
@@ -117,7 +118,9 @@ func tokenize(content string) []string {
 		"i", "after", "few", "whom", "t", "being", "if", "theirs", "my", "against", "a", "by", "doing", "it", "how",
 		"further", "was", "here", "than"}
 
-	return intersectSorted(contentSplit, stopWords).([]string)
+	intersected := intersectSorted(contentSplit, stopWords)
+	fmt.Println(intersected)
+	return nil
 }
 func split(r rune) bool {
 	return r == ' ' || r == ',' || r == ';' || r == '!' || r == '?' || r == '.'
