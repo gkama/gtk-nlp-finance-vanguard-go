@@ -57,6 +57,7 @@ func categorize(c *gin.Context) {
 	for _, mc := range model.Children {
 		modelStack.push(mc)
 	}
+	fmt.Println(modelStack)
 
 	for modelStack.len() > 0 {
 		p := modelStack.pop().(Model)
